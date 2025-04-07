@@ -27,8 +27,18 @@ class TestEchoService(unittest.TestCase):
 
     def test_srv_get(self):  # each test_* function is a test
         """Test simple call"""
-        msg = self.client.call("Hello VS2Lab")
-        self.assertEqual(msg, 'Hello VS2Lab*')
+        msg = self.client.call("GET Hans")
+        self.assertEqual(msg, '1234')
+
+    def test_srv_get_2(self):
+        """Test simple call"""
+        msg = self.client.call("GET Peter")
+        self.assertEqual(msg, '5678')
+
+    def test_srv_getall(self):
+        """Test GETALL"""
+        msg = self.client.call("GETALL")
+        self.assertEqual(msg, "Hans: 1234\nPeter: 5678\nPaul: 91011\nMary: 121314\nJohn: 151617\nJane: 181920")
 
     def tearDown(self):
         self.client.close()  # terminate client after each test

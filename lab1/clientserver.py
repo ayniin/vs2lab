@@ -16,6 +16,7 @@ class Server:
     """ The server """
     _logger = logging.getLogger("vs2lab.lab1.clientserver.Server")
     _serving = True
+    _telephone_book = {}  # empty telephone book
 
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,6 +24,14 @@ class Server:
         self.sock.bind((const_cs.HOST, const_cs.PORT))
         self.sock.settimeout(3)  # time out in order not to block forever
         self._logger.info("Server bound to socket " + str(self.sock))
+        self._telephone_book = {
+            "Hans": "1234",
+            "Peter": "5678",
+            "Paul": "91011",
+            "Mary": "121314",
+            "John": "151617",
+            "Jane": "181920"
+        }
 
     def serve(self):
         """ Serve echo """
@@ -35,7 +44,24 @@ class Server:
                     data = connection.recv(1024)  # receive data from client
                     if not data:
                         break  # stop if client stopped
-                    connection.send(data + "*".encode('ascii'))  # return sent data plus an "*"
+                    data = data.decode('ascii')
+                    self._logger.info("Received: " + data)
+                    if data in "GETALL" and "GETALL" in data:
+                        self._logger.info("GETALL")
+                        # return all names
+                        data = "\n".join([f"{name}: {number}" for name, number in self._telephone_book.items()])
+                    elif data.startswith("GET"):
+                        # GET request
+                        name = data.split()[1]
+                        if name in self._telephone_book:
+                            # return telephone number
+                            data = f"{self._telephone_book[name]}"
+                        else:
+                            # name not found
+                            data = f"Name {name} not found"
+                    else:
+                        data = "Unknown command"
+                    connection.send(data.encode('ascii'))  # return sent data plus an "*"
                 connection.close()  # close the connection
             except socket.timeout:
                 pass  # ignore timeouts
