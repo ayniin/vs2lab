@@ -30,7 +30,8 @@ class Server:
             "Paul": "91011",
             "Mary": "121314",
             "John": "151617",
-            "Jane": "181920"
+            "Jane": "181920",
+            "Björn": "212223"
         }
 
     def serve(self):
@@ -44,7 +45,7 @@ class Server:
                     data = connection.recv(1024)  # receive data from client
                     if not data:
                         break  # stop if client stopped
-                    data = data.decode('ascii')
+                    data = data.decode('utf-8')  # decode data
                     self._logger.info("Received: " + data)
                     if data in "GETALL" and "GETALL" in data:
                         self._logger.info("GETALL")
@@ -52,16 +53,20 @@ class Server:
                         data = "\n".join([f"{name}: {number}" for name, number in self._telephone_book.items()])
                     elif data.startswith("GET"):
                         # GET request
-                        name = data.split()[1]
-                        if name in self._telephone_book:
-                            # return telephone number
-                            data = f"{self._telephone_book[name]}"
+                        if len(data.split()) != 2:
+                            # wrong number of arguments
+                            data = "Wrong number of arguments"
                         else:
-                            # name not found
-                            data = f"Name {name} not found"
+                            name = data.split()[1]
+                            if name in self._telephone_book:
+                                # return telephone number
+                                data = f"{self._telephone_book[name]}"
+                            else:
+                                # name not found
+                                data = f"Name {name} not found"
                     else:
                         data = "Unknown command"
-                    connection.send(data.encode('ascii'))  # return sent data plus an "*"
+                    connection.send(data.encode('utf-8'))  # return sent data plus an "*"
                 connection.close()  # close the connection
             except socket.timeout:
                 pass  # ignore timeouts
@@ -80,9 +85,9 @@ class Client:
 
     def call(self, msg_in="Hello, world"):
         """ Call server """
-        self.sock.send(msg_in.encode('ascii'))  # send encoded string as data
+        self.sock.send(msg_in.encode('utf-8'))  # send encoded string as data
         data = self.sock.recv(1024)  # receive the response
-        msg_out = data.decode('ascii')
+        msg_out = data.decode('utf-8')
         print(msg_out)  # print the result
         self.sock.close()  # close the connection
         self.logger.info("Client down.")

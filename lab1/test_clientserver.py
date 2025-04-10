@@ -38,7 +38,7 @@ class TestEchoService(unittest.TestCase):
     def test_srv_getall(self):
         """Test GETALL"""
         msg = self.client.call("GETALL")
-        self.assertEqual(msg, "Hans: 1234\nPeter: 5678\nPaul: 91011\nMary: 121314\nJohn: 151617\nJane: 181920")
+        self.assertEqual(msg, "Hans: 1234\nPeter: 5678\nPaul: 91011\nMary: 121314\nJohn: 151617\nJane: 181920\nBjörn: 212223")
 
     def tearDown(self):
         self.client.close()  # terminate client after each test
