@@ -8,6 +8,7 @@ import zmq
 import constPipe
 
 me = str(sys.argv[1])
+#me = str(1)
 
 src = constPipe.SRC1 if me == '1' else constPipe.SRC2  # check task src host
 prt = constPipe.PORT1 if me == '1' else constPipe.PORT2  # check task src port
