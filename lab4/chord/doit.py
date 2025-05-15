@@ -30,6 +30,15 @@ class DummyChordClient:
 
     def run(self):
         print("Implement me pls...")
+        test1 = {i.decode() for i in list(self.channel.channel.smembers('node'))}
+
+        first = list(self.channel.channel.smembers('node'))[0].decode()
+        first = {first}
+        second = list(self.channel.channel.smembers('node'))[1].decode()
+        self.channel.send_to(first, [constChord.LOOKUP_REQ, int(second)])
+
+        answer = self.channel.receive_from_any()
+
         self.channel.send_to(  # a final multicast
             {i.decode() for i in list(self.channel.channel.smembers('node'))},
             constChord.STOP)

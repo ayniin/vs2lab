@@ -146,17 +146,27 @@ class ChordNode:
                                   .format(self.node_id, int(sender)))
                 break
 
+                
             if request[0] == constChord.LOOKUP_REQ:  # A lookup request
                 self.logger.info("Node {:04n} received LOOKUP {:04n} from {:04n}."
                                  .format(self.node_id, int(request[1]), int(sender)))
 
                 # look up and return local successor 
-                next_id: int = self.local_successor_node(request[1])
-                self.channel.send_to([sender], (constChord.LOOKUP_REP, next_id))
+                if self.node_id == request[1]:  # lookup for self
+                    self.channel.send_to([sender], (constChord.LOOKUP_REP, "#yolo wurde gefunden!"))
+                else: 
+                    next_id: int = self.local_successor_node(request[1])
+                    
+                    send_to = {str(next_id)}
+                    self.channel.send_to(send_to, (constChord.LOOKUP_REQ,request[1]))
+                    response = self.channel.receive_from(send_to)  # wait for reply   
+                    self.channel.send_to([sender], (constChord.LOOKUP_REP, response[1][1]))  # send reply to sender
+                    #self.logger.info("Node {:04n} forwarding LOOKUP to {:04n}."
+#                                     .format(self.node_id, next_id))
 
-                # Finally do a sanity check
-                if not self.channel.exists(next_id):  # probe for existence
-                    self.delete_node(next_id)  # purge disappeared node
+                    # Finally do a sanity check
+                    if not self.channel.exists(next_id):  # probe for existence
+                        self.delete_node(next_id)  # purge disappeared node
 
             elif request[0] == constChord.JOIN:
                 # Join request (the node was already registered above)
