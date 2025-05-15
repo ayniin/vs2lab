@@ -47,6 +47,10 @@ class Process:
         self.peer_type = 'unassigned'  # A flag indicating behavior pattern
         self.logger = logging.getLogger("vs2lab.lab5.mutex.process.Process")
 
+        self.failed_processes = set()  # Set of failed processes
+        self.last_seen = {}  # Last seen timestamp of each process
+        self.failure_timeout = 20  # Timeout for failure detection
+
     def __mapid(self, id='-1'):
         # format channel member address
         if id == '-1':
@@ -97,10 +101,18 @@ class Process:
         return first_in_queue and all_have_answered
 
     def __receive(self):
+        if not self.other_processes:
+            self.logger.debug(f"{self.__mapid()} hat keine anderen aktiven Prozesse mehr.")
+            time.sleep(1)
+            self.__check_for_failures()
+            return None
+
         # Pick up any message
         _receive = self.channel.receive_from(self.other_processes, 3)
         if _receive:
-            msg = _receive[1]
+            sender, msg = _receive
+
+            self.last_seen[sender] = time.time()  # Update last seen time
 
             self.clock = max(self.clock, msg[0])  # Adjust clock value...
             self.clock = self.clock + 1  # ...and increment
@@ -124,12 +136,31 @@ class Process:
 
             self.__cleanup_queue()  # Finally sort and cleanup the queue
         else:
+            self.__check_for_failures()  # Check for failures
+
             self.logger.info("{} timed out on RECEIVE. Local queue: {}".
                              format(self.__mapid(),
                                     list(map(lambda msg: (
                                         'Clock '+str(msg[0]),
                                         self.__mapid(msg[1]),
                                         msg[2]), self.queue))))
+
+    def __check_for_failures(self):
+        """Prüft, ob Prozesse ausgefallen sind, basierend auf Zeitüberschreitungen"""
+        current_time = time.time()
+        
+        # Prüfe alle anderen Prozesse
+        for proc in self.other_processes[:]:  # Kopie erstellen, um sicher zu iterieren
+            # Wenn wir lange nichts von einem Prozess gehört haben
+            if proc in self.last_seen and (current_time - self.last_seen[proc]) > self.failure_timeout:
+                if proc not in self.failed_processes:
+                    self.logger.warning(f"{self.__mapid()} erkannte Ausfall von {self.__mapid(proc)} nach {self.failure_timeout}s Inaktivität")
+                    self.failed_processes.add(proc)
+                    self.other_processes.remove(proc)
+                    
+                    # Queue bereinigen - entferne alle Nachrichten vom ausgefallenen Prozess
+                    self.queue = [msg for msg in self.queue if msg[1] != proc]
+                    self.__cleanup_queue()
 
     def init(self, peer_name, peer_type):
         self.channel.bind(self.process_id)
@@ -143,6 +174,11 @@ class Process:
 
         self.peer_name = peer_name  # assign peer name
         self.peer_type = peer_type  # assign peer behavior
+
+        # Initialisiere last_seen für jeden Prozess
+        current_time = time.time()
+        for proc in self.other_processes:
+            self.last_seen[proc] = current_time
 
         self.logger.info("{} joined channel as {}.".format(
             peer_name, self.__mapid()))
