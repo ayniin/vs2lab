@@ -38,6 +38,7 @@ class DummyChordClient:
         self.channel.send_to(first, [constChord.LOOKUP_REQ, int(second)])
 
         answer = self.channel.receive_from_any()
+        print("Answer: ", answer[1][1])
 
         self.channel.send_to(  # a final multicast
             {i.decode() for i in list(self.channel.channel.smembers('node'))},

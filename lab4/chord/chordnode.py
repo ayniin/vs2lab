@@ -153,7 +153,7 @@ class ChordNode:
 
                 # look up and return local successor 
                 if self.node_id == request[1]:  # lookup for self
-                    self.channel.send_to([sender], (constChord.LOOKUP_REP, "#yolo wurde gefunden!"))
+                    self.channel.send_to([sender], (constChord.LOOKUP_REP, f"Itsa me Mario witha numba: {self.node_id}"))
                 else: 
                     next_id: int = self.local_successor_node(request[1])
                     
