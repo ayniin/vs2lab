@@ -151,12 +151,12 @@ class ChordNode:
                 self.logger.info("Node {:04n} received LOOKUP {:04n} from {:04n}."
                                  .format(self.node_id, int(request[1]), int(sender)))
 
+                next_id: int = self.local_successor_node(request[1])
+
                 # look up and return local successor 
-                if self.node_id == request[1]:  # lookup for self
+                if self.node_id == next_id:  # lookup for self
                     self.channel.send_to([sender], (constChord.LOOKUP_REP, f"Itsa me Mario witha numba: {self.node_id}"))
                 else: 
-                    next_id: int = self.local_successor_node(request[1])
-                    
                     send_to = {str(next_id)}
                     self.channel.send_to(send_to, (constChord.LOOKUP_REQ,request[1]))
                     response = self.channel.receive_from(send_to)  # wait for reply   

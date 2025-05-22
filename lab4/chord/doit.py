@@ -10,6 +10,7 @@ Chord Application
 import logging
 import sys
 import multiprocessing as mp
+import random
 
 import chordnode as chord_node
 import constChord
@@ -34,7 +35,11 @@ class DummyChordClient:
 
         first = list(self.channel.channel.smembers('node'))[0].decode()
         first = {first}
-        second = list(self.channel.channel.smembers('node'))[1].decode()
+        
+        second = random.randint(0,self.channel.MAXPROC -1)
+        
+        #second = list(self.channel.channel.smembers('node'))[1].decode()
+        #second = random.choice(list(self.channel.channel.smembers('node'))).decode()
         self.channel.send_to(first, [constChord.LOOKUP_REQ, int(second)])
 
         answer = self.channel.receive_from_any()
